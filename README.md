@@ -1,4 +1,4 @@
-# ESP32 Red Team Multi-Tool (DIY Auditor)
+# ESP32 offensive Multi-Tool
 
 Una herramienta portátil de auditoría de seguridad y *Red Teaming* construida desde cero utilizando un microcontrolador ESP32. Este dispositivo cuenta con una arquitectura modular diseñada para la recolección de datos en campo, clonación de tarjetas RFID/NFC y exfiltración inalámbrica de *payloads* y volcados de memoria.
 

@@ -450,21 +450,61 @@ void flujoServidorDatos(bool &dentroDeOpcion) {
 void scanNetworks() {
     u8g2.clearBuffer();
     u8g2.setFont(u8g2_font_ncenB08_tr);
-    u8g2.drawStr(0, 20, "Escaneando...");
+    u8g2.drawStr(10, 30, "Escaneando aire...");
     u8g2.sendBuffer();
 
     int n = WiFi.scanNetworks();
-    u8g2.clearBuffer();
-    if (n == 0) u8g2.drawStr(0, 20, "No hay redes");
-    else {
-        u8g2.drawStr(0, 15, "Redes halladas:");
-        for (int i = 0; i < (n > 3 ? 3 : n); ++i) {
-            u8g2.setCursor(0, 30 + (i * 12));
-            u8g2.print(WiFi.SSID(i));
+    
+    if (n == 0) {
+        u8g2.clearBuffer();
+        u8g2.drawStr(10, 30, "0 redes :(");
+        u8g2.sendBuffer();
+        delay(2000);
+    } else {
+        int indiceRed = 0;
+        bool viendoRedes = true;
+        
+        while(viendoRedes) {
+            u8g2.clearBuffer();
+            u8g2.setFont(u8g2_font_6x12_tr);
+            u8g2.setCursor(0, 10);
+            u8g2.print("Redes: "); u8g2.print(n);
+
+            // Mostramos un máximo de 3 redes simultáneas en la pantalla OLED
+            for(int i = 0; i < 3; i++) {
+                int index = indiceRed + i;
+                if(index < n) {
+                    int yPos = 30 + (i * 12);
+                    // Flecha indicadora en el primer elemento visible
+                    if (i == 0) u8g2.drawStr(0, yPos, ">"); 
+                    
+                    u8g2.setCursor(10, yPos);
+                    String ssid = WiFi.SSID(index);
+                    // Recortamos el nombre si es muy largo para que no se salga de la pantalla
+                    if(ssid.length() > 12) ssid = ssid.substring(0, 12) + "..";
+                    
+                    u8g2.print(ssid);
+                    u8g2.print(" (");
+                    u8g2.print(WiFi.RSSI(index)); // Fuerza de la señal
+                    u8g2.print(")");
+                }
+            }
+            u8g2.sendBuffer();
+
+            // Lógica del joystick para bajar y subir en la lista de redes
+            int valorY = analogRead(35);
+            if (valorY < 1000) { if (indiceRed > 0) indiceRed--; delay(150); }
+            if (valorY > 3000) { if (indiceRed < n - 1) indiceRed++; delay(150); }
+
+            // Salir del escáner con el click
+            if (digitalRead(32) == LOW) {
+                delay(200);
+                viendoRedes = false;
+            }
         }
     }
-    u8g2.sendBuffer();
-    delay(3000);
+    // Liberar la memoria RAM del escaneo
+    WiFi.scanDelete();
 }
 
 uint8_t beacon_frame[109] = {

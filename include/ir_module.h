@@ -34,6 +34,7 @@ void ejecutarAtaqueTV(int marcaID, int accionID);
 // --- SISTEMA MODULAR DE AIRES ACONDICIONADOS ---
 void menuACMarcas(bool &dentroDeOpcion); 
 void menuAccionAC(int marcaID);          
-void ejecutarAtaqueAC(int marcaID, bool encender); 
+// Se modificó para recibir el ID de la acción completa
+void ejecutarAtaqueAC(int marcaID, int accionAC); 
 
 #endif // IR_MODULE_H

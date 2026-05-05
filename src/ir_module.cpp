@@ -18,6 +18,9 @@ decode_results results;
 #define JOY_Y  35
 #define JOY_SW 32
 
+// Variable global para mantener la temperatura en la memoria
+int tempActualAC = 22;
+
 void modoClonarIR(bool &dentroDeOpcion);
 void ataqueTVUniversal();
 void menuTVMarcas(bool &dentroDeOpcion); 
@@ -25,7 +28,7 @@ void menuAccionTV(int marcaID);
 void ejecutarAtaqueTV(int marcaID, int accionID); 
 void menuACMarcas(bool &dentroDeOpcion); 
 void menuAccionAC(int marcaID);          
-void ejecutarAtaqueAC(int marcaID, bool encender); 
+void ejecutarAtaqueAC(int marcaID, int accionAC); 
 void mostrarOpcionesIR(String codigoHex, uint32_t codigoCrudo, bool &dentroDeOpcion);
 bool esperarO_Salir(int tiempoMs); 
 void enviarCodigoIR(uint32_t codigo); 
@@ -100,31 +103,31 @@ void menuAccionTV(int marcaID) {
 void ejecutarAtaqueTV(int marcaID, int accionID) {
     u8g2.clearBuffer(); u8g2.setFont(u8g2_font_ncenB08_tr); u8g2.drawStr(0, 15, "DISPARANDO..."); u8g2.sendBuffer();
     for(int i = 0; i < 3; i++) {
-        if (marcaID == 0) { // LG
+        if (marcaID == 0) { 
             if (accionID == 0) irsend.sendNEC(0x20DF10EF, 32); else if (accionID == 1) irsend.sendNEC(0x20DF40BF, 32); 
             else if (accionID == 2) irsend.sendNEC(0x20DFC03F, 32); else if (accionID == 3) irsend.sendNEC(0x20DF906F, 32); 
         }
-        else if (marcaID == 1) { // Samsung
+        else if (marcaID == 1) { 
             if (accionID == 0) irsend.sendSAMSUNG(0xE0E040BF, 32); else if (accionID == 1) irsend.sendSAMSUNG(0xE0E0E01F, 32); 
             else if (accionID == 2) irsend.sendSAMSUNG(0xE0E0D02F, 32); else if (accionID == 3) irsend.sendSAMSUNG(0xE0E0F00F, 32); 
         }
-        else if (marcaID == 2) { // Sony
+        else if (marcaID == 2) { 
             if (accionID == 0) irsend.sendSony(0xA90, 12, 2); else if (accionID == 1) irsend.sendSony(0x490, 12, 2); 
             else if (accionID == 2) irsend.sendSony(0xC90, 12, 2); else if (accionID == 3) irsend.sendSony(0x290, 12, 2); 
         }
-        else if (marcaID == 3) { // Panasonic
+        else if (marcaID == 3) { 
             if (accionID == 0) irsend.sendPanasonic(0x4004, 0x100BCBD); else if (accionID == 1) irsend.sendPanasonic(0x4004, 0x1000405); 
             else if (accionID == 2) irsend.sendPanasonic(0x4004, 0x1008485); else if (accionID == 3) irsend.sendPanasonic(0x4004, 0x1004C4D); 
         }
-        else if (marcaID == 4) { // Hisense
+        else if (marcaID == 4) { 
             if (accionID == 0) irsend.sendNEC(0x4FB4AB5, 32); else if (accionID == 1) irsend.sendNEC(0x4FB0AF5, 32); 
             else if (accionID == 2) irsend.sendNEC(0x4FB8A75, 32); else if (accionID == 3) irsend.sendNEC(0x4FBCA35, 32); 
         }
-        else if (marcaID == 5) { // TCL
+        else if (marcaID == 5) { 
             if (accionID == 0) irsend.sendNEC(0x00E41BA4, 32); else if (accionID == 1) irsend.sendNEC(0x00E45AA5, 32); 
             else if (accionID == 2) irsend.sendNEC(0x00E40BF4, 32); else if (accionID == 3) irsend.sendNEC(0x00E4639C, 32); 
         }
-        else if (marcaID == 6) { // Vizio
+        else if (marcaID == 6) { 
             if (accionID == 0) irsend.sendNEC(0x20DF10EF, 32); else if (accionID == 1) irsend.sendNEC(0x20DF40BF, 32); 
             else if (accionID == 2) irsend.sendNEC(0x20DFC03F, 32); else if (accionID == 3) irsend.sendNEC(0x20DF906F, 32); 
         }
@@ -146,54 +149,88 @@ void menuACMarcas(bool &dentroDeOpcion) {
 }
 
 void menuAccionAC(int marcaID) {
-    bool enAccion = true; int indiceAccion = 0; const int NUM_ACCIONES = 3;
-    String listaAcciones[NUM_ACCIONES] = {"1. Encender", "2. Apagar", "3. Regresar"};
+    bool enAccion = true; int indiceAccion = 0; const int NUM_ACCIONES = 5;
+    
     while(digitalRead(JOY_SW) == LOW) delay(10); 
     while (enAccion) {
+        String listaAcciones[NUM_ACCIONES] = {
+            "1. Encender", 
+            "2. Apagar", 
+            "3. Temp + (" + String(tempActualAC) + "C)", 
+            "4. Temp - (" + String(tempActualAC) + "C)", 
+            "5. Regresar"
+        };
+        
         dibujarPantalla(indiceAccion, true, listaAcciones, NUM_ACCIONES);
+        
         int valorY = analogRead(JOY_Y);
         if (valorY < 1000) { if (indiceAccion > 0) indiceAccion--; delay(150); }
         if (valorY > 3000) { if (indiceAccion < NUM_ACCIONES - 1) indiceAccion++; delay(150); }
-        if (digitalRead(JOY_SW) == LOW) { delay(200); if (indiceAccion == 2) enAccion = false; else ejecutarAtaqueAC(marcaID, indiceAccion == 0); }
+        
+        if (digitalRead(JOY_SW) == LOW) { 
+            delay(200); 
+            if (indiceAccion == 4) enAccion = false; 
+            else ejecutarAtaqueAC(marcaID, indiceAccion); 
+        }
     }
 }
 
-void ejecutarAtaqueAC(int marcaID, bool encender) {
-    u8g2.clearBuffer(); u8g2.setFont(u8g2_font_ncenB08_tr); u8g2.drawStr(0, 15, encender ? "ENCENDIENDO..." : "APAGANDO..."); u8g2.sendBuffer();
+void ejecutarAtaqueAC(int marcaID, int accionAC) {
+    bool encender = true;
+
+    if (accionAC == 1) {
+        encender = false; 
+    } else if (accionAC == 2) {
+        if (tempActualAC < 30) tempActualAC++; 
+    } else if (accionAC == 3) {
+        if (tempActualAC > 16) tempActualAC--; 
+    }
+
+    u8g2.clearBuffer(); 
+    u8g2.setFont(u8g2_font_ncenB08_tr); 
+    
+    if (encender) {
+        u8g2.drawStr(0, 15, "ENCENDIENDO..."); 
+        u8g2.setCursor(0, 35);
+        u8g2.print("TEMP: " + String(tempActualAC) + " C");
+    } else {
+        u8g2.drawStr(0, 15, "APAGANDO...");
+    }
+    u8g2.sendBuffer();
 
     if (marcaID == 0) { 
         IRGreeAC ac(IR_TX_PIN); ac.begin();
-        if(encender) { ac.on(); ac.setTemp(20); ac.setMode(kGreeCool); ac.setFan(kGreeFanMax); } else ac.off();
+        if(encender) { ac.on(); ac.setTemp(tempActualAC); ac.setMode(kGreeCool); ac.setFan(kGreeFanMax); } else ac.off();
         ac.send();
     } 
     else if (marcaID == 1) { 
         IRMideaAC ac(IR_TX_PIN); ac.begin();
-        if(encender) { ac.on(); ac.setTemp(20); ac.setMode(kMideaACCool); ac.setFan(kMideaACFanHigh); } else ac.off();
+        if(encender) { ac.on(); ac.setTemp(tempActualAC); ac.setMode(kMideaACCool); ac.setFan(kMideaACFanHigh); } else ac.off();
         ac.send();
     } 
     else if (marcaID == 2) { 
         IRLgAc ac(IR_TX_PIN); ac.begin();
-        if(encender) { ac.on(); ac.setTemp(20); ac.setMode(kLgAcCool); ac.setFan(kLgAcFanHigh); } else ac.off();
+        if(encender) { ac.on(); ac.setTemp(tempActualAC); ac.setMode(kLgAcCool); ac.setFan(kLgAcFanHigh); } else ac.off();
         ac.send();
     } 
     else if (marcaID == 3) { 
         IRSamsungAc ac(IR_TX_PIN); ac.begin();
-        if(encender) { ac.on(); ac.setTemp(20); ac.setMode(kSamsungAcCool); ac.setFan(kSamsungAcFanHigh); } else ac.off();
+        if(encender) { ac.on(); ac.setTemp(tempActualAC); ac.setMode(kSamsungAcCool); ac.setFan(kSamsungAcFanHigh); } else ac.off();
         ac.send();
     }
     else if (marcaID == 4) { 
         IRDaikinESP ac(IR_TX_PIN); ac.begin();
-        if(encender) { ac.on(); ac.setTemp(20); ac.setMode(kDaikinCool); ac.setFan(kDaikinFanAuto); } else ac.off();
+        if(encender) { ac.on(); ac.setTemp(tempActualAC); ac.setMode(kDaikinCool); ac.setFan(kDaikinFanAuto); } else ac.off();
         ac.send();
     }
     else if (marcaID == 5) { 
         IRMitsubishiAC ac(IR_TX_PIN); ac.begin();
-        if(encender) { ac.on(); ac.setTemp(20); ac.setMode(kMitsubishiAcCool); ac.setFan(kMitsubishiAcFanMax); } else ac.off();
+        if(encender) { ac.on(); ac.setTemp(tempActualAC); ac.setMode(kMitsubishiAcCool); ac.setFan(kMitsubishiAcFanMax); } else ac.off();
         ac.send();
     }
     else if (marcaID == 6) { 
         IRToshibaAC ac(IR_TX_PIN); ac.begin();
-        if(encender) { ac.on(); ac.setTemp(20); ac.setMode(kToshibaAcCool); ac.setFan(kToshibaAcFanAuto); } else ac.off();
+        if(encender) { ac.on(); ac.setTemp(tempActualAC); ac.setMode(kToshibaAcCool); ac.setFan(kToshibaAcFanAuto); } else ac.off();
         ac.send();
     }
     delay(1000);
@@ -252,13 +289,13 @@ void ataqueTVUniversal() {
     while(digitalRead(JOY_SW) == LOW) delay(10);
     bool atacando = true;
     while (atacando) {
-        irsend.sendNEC(0x20DF10EF, 32); if(esperarO_Salir(50)) break; // LG/Vizio
-        irsend.sendSAMSUNG(0xE0E040BF, 32); if(esperarO_Salir(50)) break; // Samsung
-        irsend.sendSony(0xA90, 12, 2); if(esperarO_Salir(50)) break; // Sony
-        irsend.sendPanasonic(0x4004, 0x100BCBD); if(esperarO_Salir(50)) break; // Panasonic
-        irsend.sendNEC(0x4FB4AB5, 32); if(esperarO_Salir(50)) break; // Hisense
-        irsend.sendNEC(0x00E41BA4, 32); if(esperarO_Salir(50)) break; // TCL
-        irsend.sendRC5(0x0C, 12); if(esperarO_Salir(50)) break; // Philips (RC5)
+        irsend.sendNEC(0x20DF10EF, 32); if(esperarO_Salir(50)) break; 
+        irsend.sendSAMSUNG(0xE0E040BF, 32); if(esperarO_Salir(50)) break; 
+        irsend.sendSony(0xA90, 12, 2); if(esperarO_Salir(50)) break; 
+        irsend.sendPanasonic(0x4004, 0x100BCBD); if(esperarO_Salir(50)) break; 
+        irsend.sendNEC(0x4FB4AB5, 32); if(esperarO_Salir(50)) break; 
+        irsend.sendNEC(0x00E41BA4, 32); if(esperarO_Salir(50)) break; 
+        irsend.sendRC5(0x0C, 12); if(esperarO_Salir(50)) break; 
         if(esperarO_Salir(500)) break; 
     }
 }

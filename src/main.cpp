@@ -9,7 +9,7 @@
 #include "wifi_module.h"
 #include "bt_module.h"  
 #include "cc1101_module.h" 
-#include "sleep_module.h" // NUEVO: 1. Incluimos el módulo de suspensión
+#include "sleep_module.h" 
 
 const int NUM_ITEMS = 6; // Subimos a 6 opciones
 int indiceActual = 0;
@@ -19,10 +19,10 @@ bool dentroDeOpcion = false;
 String menuItems[NUM_ITEMS] = {"FID/NFC", "Infrarrojo IR", "Wifi", "Bluetooth", "Sub-GHz CC1101", "Gestor SD"};
 
 void setup() {
-  Serial.begin(115200); // Super importante para que el volcado USB funcione
+  Serial.begin(115200); // importante para que el volcado USB funcione
   Wire.begin(25, 26);
   
-  setupSleep(); // NUEVO: 2. Inicializamos el pin del switch
+  setupSleep();
   
   setupLED();
   setupJoystick();
@@ -37,7 +37,7 @@ void setup() {
 }
 
 void loop() {
-  checkSleepMode(); // NUEVO: 3. El vigilante que revisa si activaste el switch para dormir
+  checkSleepMode(); 
 
   parpadearLED(500);
   actualizarJoystick(indiceActual, dentroDeOpcion, NUM_ITEMS);
@@ -47,6 +47,6 @@ void loop() {
   else if(dentroDeOpcion && indiceActual == 2) flujoWiFi(dentroDeOpcion);
   else if(dentroDeOpcion && indiceActual == 3) flujoBluetooth(dentroDeOpcion);
   else if(dentroDeOpcion && indiceActual == 4) flujoCC1101(dentroDeOpcion); 
-  else if(dentroDeOpcion && indiceActual == 5) flujoSDManager(dentroDeOpcion); // NUEVO
+  else if(dentroDeOpcion && indiceActual == 5) flujoSDManager(dentroDeOpcion);
   else dibujarPantalla(indiceActual, dentroDeOpcion, menuItems, NUM_ITEMS);
 }

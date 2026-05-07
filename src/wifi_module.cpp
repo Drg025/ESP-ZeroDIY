@@ -518,8 +518,8 @@ uint8_t beacon_frame[109] = {
 };
 
 void ssidSpamReal() {
-    const char *ssids[] = {"ERROR_404_NET", "Free_WiFi_Hotspot", "Hackeado_ESP32"};
-    int num_ssids = 3;
+    const char *ssids[] = {"ERROR_404_NET", "Free_WiFi_Hotspot", "Hackeado", "Shhhh", "######"};
+    int num_ssids = 5;
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     u8g2.clearBuffer(); u8g2.setFont(u8g2_font_ncenB08_tr); u8g2.drawStr(0, 15, "Spamming SSIDs..."); u8g2.sendBuffer();

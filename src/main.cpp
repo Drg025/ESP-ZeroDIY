@@ -10,16 +10,25 @@
 #include "bt_module.h"  
 #include "cc1101_module.h" 
 #include "sleep_module.h" 
+#include "nrf_module.h" 
 
-const int NUM_ITEMS = 6; // Subimos a 6 opciones
+const int NUM_ITEMS = 7; 
 int indiceActual = 0;
 bool dentroDeOpcion = false;
 
-// Añadimos el Gestor SD al menú
-String menuItems[NUM_ITEMS] = {"FID/NFC", "Infrarrojo IR", "Wifi", "Bluetooth", "Sub-GHz CC1101", "Gestor SD"};
+
+String menuItems[NUM_ITEMS] = {
+    "FID/NFC", 
+    "Infrarrojo IR", 
+    "Wifi", 
+    "Bluetooth", 
+    "Sub-GHz CC1101", 
+    "Gestor SD", 
+    "Modulo NRF24"
+};
 
 void setup() {
-  Serial.begin(115200); // importante para que el volcado USB funcione
+  Serial.begin(115200); 
   Wire.begin(25, 26);
   
   setupSleep();
@@ -34,6 +43,8 @@ void setup() {
   setupWiFi(); 
   setupBluetooth(); 
   setupCC1101(); 
+  
+  setupNRF();
 }
 
 void loop() {
@@ -48,5 +59,11 @@ void loop() {
   else if(dentroDeOpcion && indiceActual == 3) flujoBluetooth(dentroDeOpcion);
   else if(dentroDeOpcion && indiceActual == 4) flujoCC1101(dentroDeOpcion); 
   else if(dentroDeOpcion && indiceActual == 5) flujoSDManager(dentroDeOpcion);
+  
+  // Ruteo al nuevo submenú modular
+  else if(dentroDeOpcion && indiceActual == 6) {
+      flujoNRF(dentroDeOpcion); 
+  }
+  
   else dibujarPantalla(indiceActual, dentroDeOpcion, menuItems, NUM_ITEMS);
 }

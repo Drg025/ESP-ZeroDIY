@@ -122,14 +122,14 @@ void flujoSDManager(bool &dentroDeOpcion) {
                 u8g2.sendBuffer();
 
                 WiFi.mode(WIFI_AP);
-                WiFi.softAP("FLIPPER_DIY", "flipper123");
+                WiFi.softAP("ZERO_DIY", "flipper123");
                 IPAddress IP = WiFi.softAPIP();
 
                 ftpSrv.begin("admin", "admin");
 
                 u8g2.clearBuffer();
                 u8g2.drawStr(0, 10, "== GESTOR FTP ==");
-                u8g2.setCursor(0, 25); u8g2.print("Red : FLIPPER_DIY");
+                u8g2.setCursor(0, 25); u8g2.print("Red : ZERO_DIY");
                 u8g2.setCursor(0, 35); u8g2.print("Pass: flipper123");
                 u8g2.setCursor(0, 45); u8g2.print("IP  : " + IP.toString());
                 u8g2.drawStr(0, 60, "(Click para salir)");
